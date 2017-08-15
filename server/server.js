@@ -1,16 +1,20 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
+const _ = require('lodash');
+
 const {
   ObjectID
 } = require('mongodb');
-const _ = require('lodash');
 
 const {
   mongoose
 } = require('./db/mongoose');
+
 const {
   Todo
 } = require('./models/todo');
+
 const {
   User
 } = require('./models/user');
@@ -116,8 +120,6 @@ app.patch('/todos/:id', (req, res) => {
       .send();
   }
 
-  console.log("adasdasd", body, req.body);
-
   if (_.isBoolean(body.completed) && body.completed) {
     body.completedAt = new Date().getTime();
   } else {
@@ -150,15 +152,30 @@ app.patch('/todos/:id', (req, res) => {
   )
 });
 
+
+app.post('/users', (req, res) => {
+  const {
+    body
+  } = req;
+  const user = new User({
+    email: body.email,
+    password: body.password,
+  })
+  user.save()
+    .then((doc) => {
+      return user.generateAuthToken();
+    })
+    .then((token) => {
+      res.header('x-auth', token).send(user);
+    })
+    .catch((e) => {
+      res
+        .status(400)
+        .send(e);
+    })
+});
+
+
 app.listen(3001, () => {
   console.log('Started listening on port 3001');
 });
-// const newTodo = new Todo({
-//   text: "hahhaha checking if this works"
-// })
-//
-// newTodo.save().then((doc) => {
-//   console.log(doc, 'success');
-// }, (err) => {
-//   console.log(err, 'error');
-// })
