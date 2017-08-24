@@ -57,6 +57,26 @@ UserSchema.methods.generateAuthToken = function() {
   });
 };
 
+UserSchema.statics.findByCredentials = function(email, password) {
+  const User = this;
+  return User.findOne({
+    email,
+  }).then(user => {
+    if (!user) {
+      return Promise.reject();
+    }
+    return new Promise((resolve, reject) => {
+      bcryptjs.compare(password, user.password, (err, res) => {
+        if (res) {
+          resolve(user);
+        } else {
+          reject(err);
+        }
+      });
+    });
+  });
+}
+
 UserSchema.statics.findByToken = function(token) {
   const User = this; //static methods are called with model as binding.
   let decoded;
